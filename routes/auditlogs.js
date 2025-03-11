@@ -1,13 +1,46 @@
 const express = require("express");
 const router = express.Router();
+const moment = require("moment");
+const Response = require("../lib/Response");
+const CustomError = require("../lib/Error");
+const Enum = require("../config/Enum");
+const AuditLogs = require("../db/models/AuditLogs");
 
-router.get("/:id",(req,res,next)=>{
-res.json({
-    body:req.body,
-    params:req.params,
-    query:req.query,
-    headers:req.headers
-})
+router.post("/", async (req, res) => {
+
+    let body = req.body;
+    let query = {};
+    let limit = body.limit;
+    let skip = body.skip;
+
+    if(typeof body.skip !== "numeric"){
+        skip=0;
+    }
+
+    if(typeof body.limit !== "numeric"){
+        limit=500;
+    }
+
+    try {
+        if (body.begin_date && body.end_date) {
+            query.created_at = {
+                $gte: moment(body.begin_date),
+                $lte: moment(body.end_date)
+            }
+        } else {
+            query.created_at = {
+                $gte: moment().subtract(1, "day").startOf("day"),
+                $lte: moment()
+            }
+        }
+        let audiLogs = await AuditLogs.find(query).sort({ created_at: -1 }).skip(skip).limit(limit);
+
+        res.json(Response.successResponse({ audiLogs }))
+
+    } catch (error) {
+        let errorResponse = Response.errorResponse(error);
+        res.status(errorResponse.code).json(errorResponse);
+    }
 });
 
-module.exports= router;
+module.exports = router;
