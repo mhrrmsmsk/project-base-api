@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 const moment = require("moment");
 const Response = require("../lib/Response");
-const CustomError = require("../lib/Error");
-const Enum = require("../config/Enum");
 const AuditLogs = require("../db/models/AuditLogs");
 
 router.post("/", async (req, res) => {
@@ -13,11 +11,11 @@ router.post("/", async (req, res) => {
     let limit = body.limit;
     let skip = body.skip;
 
-    if(typeof body.skip !== "numeric"){
+    if(typeof body.skip !== "number"){
         skip=0;
     }
 
-    if(typeof body.limit !== "numeric"){
+    if(typeof body.limit !== "number"){
         limit=500;
     }
 
